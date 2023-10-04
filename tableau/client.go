@@ -35,6 +35,7 @@ type Client struct {
 
 	DataSources *dataSourcesService
 	Projects    *projectsService
+	Views       *viewsService
 }
 
 // NewClient instantiates an instance of the Tableau API client.
@@ -57,6 +58,7 @@ func NewClient(serverAddr, personalAccessTokenName, personalAccessTokenSecret, s
 	}
 	c.DataSources = &dataSourcesService{client: c}
 	c.Projects = &projectsService{client: c}
+	c.Views = &viewsService{client: c}
 	return c, nil
 }
 
