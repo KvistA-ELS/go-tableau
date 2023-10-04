@@ -1,4 +1,4 @@
-module github.com/pasali/go-tableau
+module github.com/KvistA-ELS/go-tableau
 
 go 1.18
 
