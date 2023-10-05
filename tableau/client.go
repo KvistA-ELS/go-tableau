@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/hashicorp/go-cleanhttp"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"github.com/hashicorp/go-cleanhttp"
+	"github.com/pkg/errors"
 )
 
 const (
