@@ -114,6 +114,23 @@ func (c *Client) signIn(personalAccessTokenName, personalAccessTokenSecret, site
 	return nil
 }
 
+// do makes an HTTP request and return body raw
+func (c *Client) doRaw(ctx context.Context, req *http.Request) (string, error) {
+	req = req.WithContext(ctx)
+	res, err := c.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	out, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(out), nil
+}
+
 // do makes an HTTP request and populates the given struct v from the response.
 func (c *Client) do(ctx context.Context, req *http.Request, v interface{}) error {
 	req = req.WithContext(ctx)
