@@ -4,60 +4,69 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
+	"strings"
 
 	"github.com/pkg/errors"
 )
 
 // GetViewRequest encapsulates the request for getting a single View.
 type GetViewRequest struct {
-	ID string
+	ID      string
+	Filters []ViewFilter
 }
 
-type viewsResponse struct {
-	View *View `json:"view"`
+type ViewFilter struct {
+	Name  string
+	Value string
 }
 
-// View represents a Tableau view
-type View struct {
-	ID                  string            `json:"id"`
-	Name                string            `json:"name"`
-	CertificationNote   string            `json:"CertificationNote"`
-	ContentUrl          string            `json:"contentUrl"`
-	EncryptExtracts     string            `json:"encryptExtracts"`
-	Description         string            `json:"description"`
-	WebpageUrl          string            `json:"webpageUrl"`
-	IsCertified         bool              `json:"isCertified"`
-	UseRemoteQueryAgent bool              `json:"useRemoteQueryAgent"`
-	Type                string            `json:"type"`
-	Tags                map[string]string `json:"tags"`
-	Owner               struct {
-		ID string `json:"id"`
-	}
-	Project struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
-	}
-	CreatedAt time.Time `json:"CreatedAt"`
-	UpdatedAt time.Time `json:"UpdatedAt"`
+// GetViewsRequest encapsulates the request for getting a single View.
+type GetViewsRequest struct {
+	PageSize   int
+	PageNumber int
 }
 
 type viewsService struct {
 	client *Client
 }
 
-func (dss *viewsService) Get(ctx context.Context, getReq *GetViewRequest) (*View, error) {
-	path := fmt.Sprintf("sites/%s/views/%s", dss.client.SiteID, getReq.ID)
+func (dss *viewsService) GetViewData(ctx context.Context, getViewReq *GetViewRequest) (interface{}, error) {
+	requestFilter := ""
+	if len(getViewReq.Filters) > 0 {
+		var temp []string
+		for _, filter := range getViewReq.Filters {
+			temp = append(temp, filter.Name+"="+filter.Value)
+		}
+		requestFilter = strings.Join(temp, "&")
+	}
+
+	path := fmt.Sprintf("sites/%s/views/%s/data?%s", dss.client.SiteID, getViewReq.ID, requestFilter)
 	req, err := dss.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating request for get view")
 	}
 
-	ds := &viewsResponse{}
-	err = dss.client.do(ctx, req, &ds)
+	body, err := dss.client.doRaw(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	return ds.View, nil
+	return body, nil
+}
+
+func (dss *viewsService) GetViews(ctx context.Context, getViewsReq *GetViewsRequest) (interface{}, error) {
+	path := fmt.Sprintf("sites/%s/views/?pageSize=%d&pageNumber=%d", dss.client.SiteID, getViewsReq.PageSize, getViewsReq.PageNumber)
+	req, err := dss.client.newRequest(http.MethodGet, path, nil)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating request for get view")
+	}
+
+	var views interface{}
+	err = dss.client.do(ctx, req, &views)
+	if err != nil {
+		return nil, err
+	}
+
+	return views, nil
 }
