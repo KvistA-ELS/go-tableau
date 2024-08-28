@@ -1,4 +1,4 @@
-module github.com/KvistA-ELS/go-tableau
+module github.com/kvista-els/go-tableau
 
 go 1.18
 
